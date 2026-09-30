@@ -61,7 +61,7 @@ export function getUserProfile () {
         const singleQuoteRegex = /^'(?:[^'\\]|\\.)*'$/
         const doubleQuoteRegex = /^"(?:[^"\\]|\\.)*"$/
         const backtickRegex = /^`(?:[^`\\$]|\\.|\$(?!{))*`$/
-        const numericRegex = /^-?\d+(?:\.\d+)?$/
+        const numericRegex = /^[0-9+\-*/%(). ]+$/
         const booleanRegex = /^(?:true|false|null|undefined)$/
 
         const isSafe = singleQuoteRegex.test(code) ||
@@ -75,10 +75,10 @@ export function getUserProfile () {
         }
         username = eval(code) // eslint-disable-line no-eval
       } catch (err) {
-        username = '\\' + username
+        username = '\\' + (username?.replace(/\r?\n|\r/g, '\n\\') ?? '')
       }
     } else {
-      username = '\\' + username
+      username = '\\' + (username?.replace(/\r?\n|\r/g, '\n\\') ?? '')
     }
 
     const themeKey = config.get<string>('application.theme') as keyof typeof themes
