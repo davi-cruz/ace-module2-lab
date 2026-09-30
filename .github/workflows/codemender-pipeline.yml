@@ -24,7 +24,7 @@ jobs:
   codemender-security:
     name: Scan, Identify, and Patch
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 180         # Extended from 60 to 180m to allow multi-finding AI remediation
 
     steps:
       - name: Checkout Code
@@ -166,6 +166,12 @@ jobs:
               | tee "$RUNNER_TEMP/fix-$FID.cm.log" || true
 
             python3 .github/scripts/extract_cm_diff.py "$RUNNER_TEMP/fix-$FID.cm.log" > "$RUNNER_TEMP/fix-$FID.patch" || true
+
+            # Extract clean unified diff block (discards terminal preview with line numbers)
+            if [ -s "$RUNNER_TEMP/fix-$FID.patch" ]; then
+              awk '/^--- a\//{buf=""} {buf = buf $0 "\n"} END{printf "%s", buf}' "$RUNNER_TEMP/fix-$FID.patch" > "$RUNNER_TEMP/fix-$FID.clean.patch"
+              mv "$RUNNER_TEMP/fix-$FID.clean.patch" "$RUNNER_TEMP/fix-$FID.patch"
+            fi
 
             # Robust patch application: try relative to scan path and repo root
             if [ -s "$RUNNER_TEMP/fix-$FID.patch" ]; then
